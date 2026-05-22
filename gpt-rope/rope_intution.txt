@@ -1,0 +1,163 @@
+Q in pos 1
+K in pos 2
+
+d = 4
+
+Q = [q1, q2, q3, q4] => [(q1, q2), (q3, q4)]
+K = [k1, k2, k3, k4] => [(k1, k2), (k3, k4)]
+
+pair multiplier
+    pair_i => 10000^-2(i-1)/d
+    pair_1 => 10000^2-(0/4) => 1
+    pair_2 => 10000^-2(1/4) = 10000^(-1/2) = 10000 ^ -0.5 => 1/sqrt(10000) => 1/100 => 0.01
+
+
+position multiplier
+    pos 0 => 0
+    pos 1 => 1
+    pos 2 => 2
+
+
+Rotate Q pairs at pos 1
+    rotation for pair 1 => 1*1 = 1 rad
+    ratation for pair 2 => 1 * 0.01 => 0.01 rad
+    pair 1
+        q1' = q1*cos(1) - q2*sin(1)
+        q2' = q1*sin(1) + q2*cos(1)
+    
+    pair 2
+        q3' = q3*cos(0.01) - q4*sin(0.01)
+        q4' = q3*sin(0.01) + q4*cos(0.01)
+
+Q_rot = [q1*cos(1) - q2*sin(1), q1*sin(1) + q2*cos(1), q3*cos(0.01) - q4*sin(0.01), q3*sin(0.01) + q4*cos(0.01)]
+    
+Rotate K pairs at pos 2
+    rotation for pair 1 => 2*1 = 2 rad
+    ratation for pair 2 => 2 * 0.01 => 0.02 rad
+    pair 1
+        k1' = k1*cos(2) - k2*sin(2)
+        k2' = k1*sin(2) + k2*cos(2)
+    
+    pair 2
+        k3' = k3*cos(0.02) - k4*sin(0.02)
+        k4' = k3*sin(0.02) + k4*cos(0.02)
+
+K_rot = [k1*cos(2) - k2*sin(2), k1*sin(2) + k2*cos(2), k3*cos(0.02) - k4*sin(0.02), k3*sin(0.02) + k4*cos(0.02)]
+
+Now Q_rot.K_rot
+Only taking dim0.dim1
+    
+       q1cos(1)*k1cos(2) - q1cos(1)*k2sin(2) - q2sin(1)*k1cos(2) + q2sin(1)*k2sin(2) +
+       q1sin(1)*k1sin(2) + q1sin(1)*k2cos(2) + q2cos(1)*k1sin(2) + q2cos(1)*k2cos(2)
+
+        Simplifyig this we get
+        q1k1 => q1k1[cos(1)cos(2) + sin(1)sin(2)] => q1k1[cos(1-2)]
+        q2k2 => q2k2[sin(1)sin(2) + cos(1)cos(2)] => q2k2[cos(1-2)]
+        q1k2 => q1k2[sin(1)cos(2) - cos(1)sin(2)] => q1k2[sin(1-2)]
+        q2k1 => -q2k1[sin(1)cos(2) + cos(1)sin(2)] => -q2k1[sin(1-2)]
+
+        So => q1k1+q2k2[cos(1-2)] + q1k2-q2k1[sin(1-2)]
+
+If we do it for whole Q_rot.K_rot we get
+    [
+        (q1​k1​+q2​k2​)cos(1−2)+(q1​k2​−q2​k1​)sin(1−2) +
+        (q3​k3​+q4​k4​)cos(0.01−0.02)+(q3​k4​−q4​k3​)sin(0.01−0.02)
+    ]
+
+Here the important thing the result is now dependent of the difference of the positions of the tokens   
+
+############################################################################################
+
+In progrmatically impl like pytorch we do a bit of an optimzation on definig Q,K vectors
+
+lets take the same above example 
+Q = [q1, q2, q3, q4] => [(q1, q2), (q3, q4)]
+K = [k1, k2, k3, k4] => [(k1, k2), (k3, k4)]
+
+Seq length (no of tokens) => 4
+
+generally Q,K would be a 4dim tensors with [Batch, CL,  Num_Heads, Head_Dim]
+In this case lets take it as [2, 4, 1, 4]
+
+
+so we have d = 4 and d/2 = 2, i.e 2 pairs [Assuming we are not doing multi head attn, in case of MHA we the d will be head_dim so we do head_dim/2]
+Step 1
+    So we first build a cache of cos and sin values for each pair position since they are always constant
+
+    we get θ values for each position like below
+    freq_array = arrange(d/2) =>  [0,1]
+    formula = 10000^(-2*i/d) [here d is 4]
+    so we do freq_array * formula => [1, 0.01]
+    so, ang_array = [1, 0.01]
+    now pos array for each token in seq length
+    pos_array = arrange(seq_len) => [0,1,2,3]
+    now for each position we will have to have cos/sin value for each pair (d/2 pairs)
+    so we do, pos_array.outer(ang_array) 
+    => ang_array = [
+        [0*1, 0*0.01],
+        [1*1, 1*0.01],
+        [2*1, 2*0.01], 
+        [3*1, 3*0.01]
+    ]
+    Reulting in (CL, D/2) matrix
+
+
+    now we apply cos and sin to ang_array
+    cos_ang = cos(ang_array) 
+    sin_ang = sin(ang_array) 
+    apply cos/sin to the (CL, D/2) matrix
+
+Step 2:
+    We use the cos_ang,sin_ang and apply them to Q,K independently, i.e rotate them
+
+    apply_rotation(Q/K, cos_ang, sin_ang):
+        Q/K is in shape [Batch, CL, Num_Heads, Head_Dim]
+        but cos_ang , sin_ang is [CL, d/2] = [CL, Head_Dim/2]
+        so we would have to match it to Q/K
+
+        We add a batch dim at 0, and head dimension by unsquzing
+        cos_ang = cos_ang.unsqueez(0) => [1, CL, D/2]
+        cos_ang.unsqueez(2) => [1, CL, 1, D/2]
+
+        Same for sin_ang as well
+
+        But the last dimension is still D/2 in cos/sin and D in Q/K
+        the D/2 needs to be repeated to match D, i.e each pair in Q/K would be rotated by same angle
+
+        So we do 
+        torch.repeat_interleave(cos/sin, 2, dim=-1)
+        This repeats the last dimension values 2 times
+
+        Now cos_ang/sin_ang become same as Q/K => [Batch, CL, Num_Heads, Head_Dim] => [1, CL, 1, D]
+        this imples that for every batch, across all heads we will apply the same cos_ang/sin_ang values
+
+        Now lets say the input ia Q and its 
+        Q = [2, 4, 1, 4]
+        But lets take 1st batch, 1st token head values
+        Q[0, 0, 0] = [q1, q2, q3, q4]
+        now Q_rot[0,0,0] = [q1*cos(1) - q2*sin(1), q1*sin(1) + q2*cos(1), q3*cos(0.01) - q4*sin(0.01), q3*sin(0.01) + q4*cos(0.01)]
+        if we separate sin and cos
+        cos_ang[q1,q2,q3,q4] + sin_ang[-q2,q1,-q4,q3]  [tip: remember tat cos_ang/sin_ang has correct theta values for each pair since we deuplicated last dimension values]
+
+        [-q2,q1,-q4,q3] => this can be achived by rotating each pair by 90 degrees or properly flipping the vector pairs
+        define rotate_half
+        rotate_halp(x):
+            This will take an input x= [B, CL, n_head, head_dim]
+            x1 = x[..., ::2] This will be [B, CL, n_head, head_dim/2]. starting form 0 every 2nd element
+            x2 = x[..., 1::2] This will be [B, CL, n_head, head_dim/2]. starting form 1 every 2nd element
+            x_rot = torch.stack((-x2, x1), dim=-1) this will be [B, CL, n_head, head_dim/2, 2]. Here we are keeping negative 2nd element in very pair first and 1st element in every pair second
+            x_rot.flatten(dim=-2) (tip: dim is -2 since we got x_rot as [B, CL, n_head, head_dim/2, 2] after stack )
+            This will finally give us 
+            X[0,0,0] as [-q2,q1,-q4,q3]
+        
+        Now, finally we do 
+        cos_ang*Q + sin_ang* rotate_half(Q)
+
+        
+
+
+    
+
+
+
+

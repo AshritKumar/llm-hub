@@ -1,0 +1,113 @@
+without high precision                                                                                                                                                                                                            
+                                                                                                                                                                                                                                    
+  Step 0,  loss 10.982691764831543 dt = 3192.43 ms, token_throughput = 2566.07 tokens/s                                                                                                                                             
+  Step 1,  loss 9.6473388671875 dt = 5704.51 ms, token_throughput = 1436.06 tokens/s                                                                                                                                                
+  Step 2,  loss 8.849237442016602 dt = 3267.13 ms, token_throughput = 2507.40 tokens/s                                                                                                                                              
+  Step 3,  loss 8.641016006469727 dt = 3955.92 ms, token_throughput = 2070.82 tokens/s                                                                                                                                              
+  Step 4,  loss 8.47070598602295 dt = 4363.09 ms, token_throughput = 1877.57 tokens/s                                                                                                                                               
+                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                    
+  With high precision                                                                                                                                                                                                               
+                                                                                                                                                                                                                                    
+  Step 0,  loss 10.954767227172852 dt = 3414.64 ms, token_throughput = 2399.08 tokens/s                                                                                                                                                                                                                                                                                                                                                                          
+  Step 1,  loss 9.556242942810059 dt = 3616.76 ms, token_throughput = 2265.01 tokens/s                                                                                                                                                                                                                                
+  Step 2,  loss 9.100804328918457 dt = 2934.40 ms, token_throughput = 2791.71 tokens/s                                                                                                                                                          
+  Step 3,  loss 8.618913650512695 dt = 2870.83 ms, token_throughput = 2853.53 tokens/s                                                                                                                                                
+  Step 4,  loss 8.548507690429688 dt = 2868.30 ms, token_throughput = 2856.04 tokens/s                                                                                                                                              
+                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                    
+  with bfloat16  and no flast attn                                                                                                                                                                                                                  
+                                                                                                                                                                                                                                    
+  Step 0,  loss 10.898651123046875 dt = 3469.02 ms, token_throughput = 2361.47 tokens/s                                                                                                                                             
+  Step 1,  loss 9.493989944458008 dt = 2636.43 ms, token_throughput = 3107.23 tokens/s                                                                                                                                              
+  Step 2,  loss 9.095123291015625 dt = 2543.08 ms, token_throughput = 3221.29 tokens/s                                                                                                                                              
+  Step 3,  loss 8.575533866882324 dt = 2544.57 ms, token_throughput = 3219.40 tokens/s                                                                                                                                              
+  Step 4,  loss 8.506465911865234 dt = 2543.92 ms, token_throughput = 3220.23 tokens/s     
+
+  Step 0,  loss 10.977210998535156 dt = 3477.34 ms, token_throughput = 2355.82 tokens/s
+Step 1,  loss 9.526294708251953 dt = 4540.88 ms, token_throughput = 1804.05 tokens/s
+Step 2,  loss 8.754480361938477 dt = 2581.84 ms, token_throughput = 3172.94 tokens/s
+Step 3,  loss 9.349875450134277 dt = 2556.93 ms, token_throughput = 3203.84 tokens/s
+Step 4,  loss 8.462549209594727 dt = 2551.03 ms, token_throughput = 3211.25 tokens/s                                                                                                                                         
+                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                    
+  torch. Compile and bfloat16                                                                                                                                                                                                       
+                                                                                                                                                                                                                                    
+  Step 0,  loss 10.990089416503906 dt = 3823.32 ms, token_throughput = 2142.64 tokens/s                                                                                                                                             
+  Step 1,  loss nan dt = 2836.78 ms, token_throughput = 2887.78 tokens/s                                                                                                                                                            
+  Step 2,  loss nan dt = 2835.02 ms, token_throughput = 2889.57 tokens/s                                                                                                                                                            
+  Step 3,  loss nan dt = 2837.60 ms, token_throughput = 2886.95 tokens/s                                                                                                                                                            
+  Step 4,  loss nan dt = 2871.76 ms, token_throughput = 2852.60 tokens/s    
+
+
+  bfloat16 and flash attn
+
+Step 0,  loss 10.959823608398438 dt = 4098.72 ms, token_throughput = 1998.67 tokens/s
+Step 1,  loss 9.539616584777832 dt = 3216.71 ms, token_throughput = 2546.70 tokens/s
+Step 2,  loss 8.792560577392578 dt = 2738.44 ms, token_throughput = 2991.49 tokens/s
+Step 3,  loss 8.776920318603516 dt = 2750.42 ms, token_throughput = 2978.45 tokens/s
+Step 4,  loss 8.522680282592773 dt = 2796.75 ms, token_throughput = 2929.11 tokens/s    
+
+
+bfloat, no flast attn and with padded vocab size to make it a pow of 2 (50304)
+
+Step 0,  loss 10.849117279052734 dt = 3094.17 ms, token_throughput = 2647.56 tokens/s
+Step 1,  loss 9.532363891601562 dt = 2905.55 ms, token_throughput = 2819.43 tokens/s
+Step 2,  loss 9.144079208374023 dt = 2518.96 ms, token_throughput = 3252.14 tokens/s
+Step 3,  loss 8.603759765625 dt = 2525.36 ms, token_throughput = 3243.90 tokens/s
+Step 4,  loss 8.417106628417969 dt = 2512.72 ms, token_throughput = 3260.21 tokens/s
+
+
+
+MLX -  without complile
+
+Step 0,  loss 10.877129 dt = 2064.15 ms, token_throughput = 3968.70 tokens/s
+Step 1,  loss 9.442511 dt = 2035.47 ms, token_throughput = 4024.63 tokens/s
+Step 2,  loss 13.878605 dt = 2037.41 ms, token_throughput = 4020.80 tokens/s
+Step 3,  loss 9.958840 dt = 2013.32 ms, token_throughput = 4068.90 tokens/s
+Step 4,  loss 9.811292 dt = 2010.59 ms, token_throughput = 4074.43 tokens/s
+Step 5,  loss 8.383513 dt = 1973.76 ms, token_throughput = 4150.46 tokens/s
+Step 6,  loss 7.843076 dt = 1972.05 ms, token_throughput = 4154.05 tokens/s
+Step 7,  loss 7.181599 dt = 1965.64 ms, token_throughput = 4167.61 tokens/s
+Step 8,  loss 6.676764 dt = 1964.04 ms, token_throughput = 4171.00 tokens/s
+Step 9,  loss 6.736505 dt = 1983.97 ms, token_throughput = 4129.10 tokens/s
+
+
+MLX with Compile
+
+Step 0,  loss 7.401030 dt = 3208.71 ms, token_throughput = 2553.05 tokens/s
+Step 1,  loss 7.387241 dt = 1710.22 ms, token_throughput = 4790.03 tokens/s
+Step 2,  loss 7.422652 dt = 1719.75 ms, token_throughput = 4763.48 tokens/s
+Step 3,  loss 7.169732 dt = 1694.32 ms, token_throughput = 4834.98 tokens/s
+Step 4,  loss 7.031009 dt = 1697.05 ms, token_throughput = 4827.21 tokens/s
+Step 5,  loss 6.765439 dt = 1691.11 ms, token_throughput = 4844.14 tokens/s
+Step 6,  loss 7.090917 dt = 1734.31 ms, token_throughput = 4723.49 tokens/s
+Step 7,  loss 7.085093 dt = 1690.60 ms, token_throughput = 4845.63 tokens/s
+Step 8,  loss 6.886300 dt = 1700.07 ms, token_throughput = 4818.62 tokens/s
+Step 9,  loss 6.629436 dt = 1690.97 ms, token_throughput = 4844.55 tokens/s
+
+
+Pytorch with grad accum - 524288 toks per batch => 64 iters per step (8, 1024) => took 27min 30sec
+Step 0,  loss = 11.00595760345459 | dt = 158365.61 ms | norm = 27.5533 | LR = 6.00e-05 | token_throughput = 3310.62 tokens/s
+Step 1,  loss = 9.643841743469238 | dt = 191306.80 ms | norm = 9.6292 | LR = 1.20e-04 | token_throughput = 2740.56 tokens/s
+Step 2,  loss = 9.226582527160645 | dt = 158562.32 ms | norm = 5.2600 | LR = 1.80e-04 | token_throughput = 3306.51 tokens/s
+Step 3,  loss = 9.877049446105957 | dt = 158707.24 ms | norm = 9.4276 | LR = 2.40e-04 | token_throughput = 3303.49 tokens/s
+Step 4,  loss = 9.274614334106445 | dt = 162172.62 ms | norm = 4.4012 | LR = 3.00e-04 | token_throughput = 3232.90 tokens/s
+Step 5,  loss = 8.701825141906738 | dt = 162542.47 ms | norm = 3.7342 | LR = 3.60e-04 | token_throughput = 3225.54 tokens/s
+Step 6,  loss = 8.3407621383667 | dt = 162829.09 ms | norm = 2.1127 | LR = 4.20e-04 | token_throughput = 3219.87 tokens/s
+Step 7,  loss = 8.067447662353516 | dt = 162199.10 ms | norm = 2.5364 | LR = 4.80e-04 | token_throughput = 3232.37 tokens/s
+Step 8,  loss = 7.722659587860107 | dt = 166043.05 ms | norm = 2.1407 | LR = 5.40e-04 | token_throughput = 3157.54 tokens/s
+Step 9,  loss = 7.384433269500732 | dt = 172508.41 ms | norm = 2.1512 | LR = 6.00e-04 | token_throughput = 3039.20 tokens/s
+
+
+
+
+MLX
+Step 0: val_loss = 10.8822
+Step 0,  loss = 10.8776 | dt = 418239.95 ms | norm = 16.1250 | LR = 6.00e-05 | token_throughput = 1253.56 tokens/s
+Step 1,  loss = 10.1358 | dt = 355663.57 ms | norm = 8.4375 | LR = 1.20e-04 | token_throughput = 1474.11 tokens/s

@@ -311,3 +311,94 @@ of model depth — the same α works whether you have 6 or 24 blocks.
 
 During inference (`targetTox=None`) the aux loss is still computed inside the router
 but is discarded. Only `logits` for the last position is returned.
+
+---
+
+## Memory vs Compute Trade-off
+
+### The core tension
+
+MoE decouples two things that are locked together in a dense model:
+
+| | Dense | MoE (N experts, top-k) |
+|---|---|---|
+| Total FFN parameters | 1 × FFN | N × FFN |
+| Parameters active per token | 1 × FFN | k × FFN |
+| Compute per token | 1 × FFN | k × FFN |
+| Memory required | 1 × FFN | N × FFN |
+
+You get N× the knowledge capacity at only k× the compute cost per token.
+The price is N× the memory for FFN weights.
+
+### Concrete numbers (our config)
+
+```
+emb_dim = 384,  ffn_mult = 4,  n_experts = 8,  top_k = 2,  n_blocks = 6
+
+Single expert FFN params  =  2 × (384 × 1536)  =  1,179,648
+
+Dense model FFN total     =  6 × 1,179,648      ≈   7M params
+MoE   model FFN total     =  6 × 8 × 1,179,648  ≈  56M params   (8× more)
+
+Compute per token (FFN):
+    Dense  →  1 × FFN  per block
+    MoE    →  2 × FFN  per block   (k=2 experts fire)
+```
+
+The MoE model holds 8× more FFN knowledge in memory but spends only 2× the dense
+compute per token — not 8×.
+
+### The right comparison: fix compute, not parameter count
+
+Comparing "same parameter count" misses the point. The right question is:
+**given the same compute budget (FLOPs per token), what can each architecture fit?**
+
+```
+Dense model at 2× FFN compute:   one big FFN with hidden_dim = 4 × ED * 2
+                                  → same compute, same memory, one generalist FFN
+
+MoE model at 2× FFN compute:     8 experts each with hidden_dim = 4 × ED
+                                  → same compute, 8× memory, 8 specialised FFNs
+```
+
+MoE uses the extra memory to buy **specialisation** — experts that have carved up the
+problem space — at no extra inference cost per token.
+
+### Where MoE wins
+
+**Large-scale serving** — you have abundant GPU memory (or many GPUs) but want to
+maximise knowledge per FLOP. Mixtral 8×7B delivers ~13B-parameter compute cost while
+holding 47B parameters in memory. GPT-4 and DeepSeek-V2 follow the same pattern.
+
+**Distributed inference** — different experts can live on different GPUs. Each token
+only routes to k GPUs, not all N. Communication cost scales with k, not N.
+
+**Training efficiency** — because most experts are idle for any given token, you can
+train a much larger model within the same compute budget. Sparse gradients mean each
+expert's weights update less frequently but more focused updates per seen token type.
+
+### Where MoE breaks down
+
+**Memory-constrained deployment** — all N expert weight matrices must be loaded into
+VRAM even if only k fire per token. If they don't fit, you page from CPU RAM, which
+destroys throughput. A smaller dense model that fits entirely on GPU is often faster
+in practice.
+
+**Small batch / low throughput** — MoE's advantage shrinks when the batch is too small
+to distribute load across experts meaningfully. At batch size 1 (e.g. interactive chat
+on a laptop), the routing overhead and memory pressure rarely pay off.
+
+**Routing instability early in training** — before aux loss takes effect, collapsed
+routing means most experts receive no gradients for many steps. This can slow convergence
+compared to a dense model of equal compute cost.
+
+### Rule of thumb
+
+```
+MoE makes sense when:   memory_budget >> compute_budget
+Dense makes sense when: memory_budget ~= compute_budget   (or memory is the bottleneck)
+```
+
+At the scales where MoE is used in production (70B+ parameter-equivalent models),
+memory bandwidth and hardware parallelism make the trade clearly worthwhile.
+At smaller scales (sub-1B), a dense model is usually simpler and faster end-to-end.
